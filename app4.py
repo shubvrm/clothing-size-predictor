@@ -123,6 +123,9 @@ predicted_df = pd.DataFrame({
 })
 st.table(predicted_df)
 
+st.markdown(
+    "🔹 Adjust your measurements in the sidebar to get real-time recommendations.")
+
 # Store measurements in dictionary
 user_measurements = {
     "Chest": user_chest,
@@ -166,8 +169,7 @@ st.download_button(
 # st.subheader("📜 Size Chart Reference")
 # st.dataframe(size_chart)
 
-st.markdown(
-    "🔹 Adjust your measurements in the sidebar to get real-time recommendations.")
+
 
 # 📌 **Display Static Image of the Sewing Pattern**
 st.subheader("📷 Sewing Pattern Diagram")
