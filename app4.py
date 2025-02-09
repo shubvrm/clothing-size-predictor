@@ -75,7 +75,7 @@ def calculate_pattern_measurements(measurements):
 
 # Streamlit UI
 st.title("👕 Clothing Sewing Pattern Generator")
-st.write("Enter your body measurements to get a recommended clothing size and sewing pattern dimensions.")
+st.write("Enter your body measurements to get sewing pattern dimensions.")
 
 # Sidebar user input
 st.sidebar.header("📏 Enter Your Measurements")
