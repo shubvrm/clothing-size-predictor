@@ -172,4 +172,4 @@ st.markdown(
 # 📌 **Display Static Image of the Sewing Pattern**
 st.subheader("📷 Sewing Pattern Diagram")
 st.image("annotated-pattern.png", caption="Example Sewing Pattern",
-         use_column_width=True)
+         use_container_width =True)
