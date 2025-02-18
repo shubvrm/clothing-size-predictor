@@ -15,6 +15,13 @@ size_chart = pd.DataFrame({
     'Neck': [(14, 14.5), (14, 14.5), (15, 15.5), (16, 16.5), (17, 17.5), (18, 18.5)]
 })
 
+# Fit adjustment multipliers
+fit_adjustments = {
+    "Well-Fit": 1.0,
+    "Relaxed": 1.05,
+    "Oversized": 1.1
+}
+
 # Function to calculate midpoints for range values
 
 
@@ -24,11 +31,12 @@ def midpoint(range_tuple):
 # Function to predict missing measurements
 
 
-def predict_measurements(chest):
-    shoulder_width = 0.47 * chest
-    sleeve_length = 0.32 * chest
-    body_length = 25 + (chest / 11)
-    neck = 0.42 * chest
+def predict_measurements(chest, fit):
+    factor = fit_adjustments[fit]
+    shoulder_width = 0.47 * chest * factor
+    sleeve_length = 0.32 * chest * factor
+    body_length = (25 + (chest / 11)) * factor
+    neck = 0.42 * chest * factor
     return shoulder_width, sleeve_length, body_length, neck
 
 # Function to find the closest size based on Euclidean distance
@@ -74,19 +82,24 @@ def calculate_pattern_measurements(measurements):
 
 
 # Streamlit UI
-st.title("👕 Clothing Sewing Pattern Generator")
-st.write("Enter your body measurements to get sewing pattern dimensions.")
+st.title("👕 Clothing Size Recommender & Sewing Pattern Generator")
+st.write("Enter your body measurements to get a recommended clothing size and sewing pattern dimensions.")
 
 # Sidebar user input
 st.sidebar.header("📏 Enter Your Measurements")
 
-# Chest Input
+# Fit Preference
+fit_preference = st.sidebar.radio("Select Fit Preference", [
+                                  "Well-Fit", "Relaxed", "Oversized"], index=0)
+
+# Adjusted Chest and Waist based on Fit
 user_chest = st.sidebar.slider(
     "Chest (in inches)", min_value=30, max_value=55, value=42)
-
-# Waist Input
 user_waist = st.sidebar.slider(
     "Waist (in inches)", min_value=25, max_value=50, value=38)
+
+adjusted_chest = user_chest * fit_adjustments[fit_preference]
+adjusted_waist = user_waist * fit_adjustments[fit_preference]
 
 # Optional input for Shoulder Width
 user_shoulder_width = st.sidebar.text_input(
@@ -94,21 +107,23 @@ user_shoulder_width = st.sidebar.text_input(
 
 # Predict missing measurements
 if not user_shoulder_width.strip():
-    predicted_measurements = predict_measurements(user_chest)
+    predicted_measurements = predict_measurements(
+        adjusted_chest, fit_preference)
     user_shoulder_width, sleeve_length, body_length, neck = predicted_measurements
     predicted = True
 else:
     try:
         user_shoulder_width = float(user_shoulder_width)
         predicted = False
-        _, sleeve_length, body_length, neck = predict_measurements(user_chest)
+        _, sleeve_length, body_length, neck = predict_measurements(
+            adjusted_chest, fit_preference)
     except ValueError:
         st.sidebar.error("❌ Please enter a valid number for Shoulder Width.")
         st.stop()
 
 # Find recommended size
 recommended_size = find_closest_size(
-    user_chest, user_waist, user_shoulder_width)
+    adjusted_chest, adjusted_waist, user_shoulder_width)
 
 # Display Results
 st.subheader("📏 Recommended Size")
@@ -128,8 +143,8 @@ st.markdown(
 
 # Store measurements in dictionary
 user_measurements = {
-    "Chest": user_chest,
-    "Waist": user_waist,
+    "Chest": adjusted_chest,
+    "Waist": adjusted_waist,
     "Shoulder Width": user_shoulder_width,
     "Sleeve Length": sleeve_length,
     "Body Length": body_length,
@@ -145,16 +160,6 @@ pattern_df = pd.DataFrame(pattern_measurements.items(), columns=[
                           "Measurement", "Value (inches)"])
 st.table(pattern_df)
 
-# Provide JSON download option
-# export_data = json.dumps(user_measurements, indent=4)
-
-# st.download_button(
-#     label="📥 Download Your Measurements",
-#     data=export_data,
-#     file_name="measurements.json",
-#     mime="application/json",
-# )
-
 # Provide Pattern Measurements JSON Download
 pattern_export_data = json.dumps(pattern_measurements, indent=4)
 
@@ -165,13 +170,6 @@ st.download_button(
     mime="application/json",
 )
 
-# Show Size Chart
-# st.subheader("📜 Size Chart Reference")
-# st.dataframe(size_chart)
-
-
-
-# 📌 **Display Static Image of the Sewing Pattern**
+# 📌 Display Static Image of the Sewing Pattern
 st.subheader("📷 Sewing Pattern Diagram")
-st.image("annotated-pattern.png", caption="Example Sewing Pattern",
-         use_container_width =True)
+st.image("annotated-pattern.png", caption="Example Sewing Pattern")
